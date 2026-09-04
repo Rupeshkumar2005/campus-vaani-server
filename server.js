@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 5000;
 // Replace the second one below with your actual Vercel URL.
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://campus-vaani.vercel.app/", // TODO: replace with your actual Vercel URL
+  "https://campus-vaani.vercel.app", // TODO: replace with your actual Vercel URL
 ];
 
 app.use(
