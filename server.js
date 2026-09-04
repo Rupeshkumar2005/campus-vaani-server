@@ -11,10 +11,29 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+// Only these origins can call the backend.
+// Replace the second one below with your actual Vercel URL.
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://campus-vaani.vercel.app/", // TODO: replace with your actual Vercel URL
+];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // requests with no origin (curl, Postman, mobile apps) are allowed too
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+  })
+);
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/attempts", attemptRoutes);
+
 app.get("/api/questions", async (req, res) => {
   try {
     const filter = {};
@@ -22,7 +41,8 @@ app.get("/api/questions", async (req, res) => {
     const questions = await Question.find(filter);
     res.json(questions);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Fetch questions error:", err);
+    res.status(500).json({ error: "Something went wrong. Please try again." });
   }
 });
 
