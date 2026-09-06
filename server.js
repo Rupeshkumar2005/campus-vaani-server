@@ -33,6 +33,9 @@ app.use(
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/attempts", attemptRoutes);
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", message: "CampusVaani API is running" });
+});
 
 app.get("/api/questions", async (req, res) => {
   try {
