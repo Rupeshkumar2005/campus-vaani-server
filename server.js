@@ -41,10 +41,53 @@ app.get("/api/questions", async (req, res) => {
   try {
     const filter = {};
     if (req.query.moduleType) filter.moduleType = req.query.moduleType;
-    const questions = await Question.find(filter);
+    const questions = await Question.find(filter).select(
+      "-answerIndex -answer -correctIndex -explanation -modelAnswer"
+    );
     res.json(questions);
   } catch (err) {
     console.error("Fetch questions error:", err);
+    res.status(500).json({ error: "Something went wrong. Please try again." });
+  }
+});
+
+app.post("/api/questions/check", async (req, res) => {
+  try {
+    const { questionId, selectedIndex, typedAnswer } = req.body;
+
+    if (!questionId) {
+      return res.status(400).json({ error: "questionId is required" });
+    }
+
+    const question = await Question.findById(questionId);
+    if (!question) {
+      return res.status(404).json({ error: "Question not found" });
+    }
+
+    let isCorrect = false;
+    let correctAnswerText = null;
+
+    if (question.type === "fill-blank") {
+      isCorrect =
+        typedAnswer &&
+        typedAnswer.trim().toLowerCase() === question.answer.toLowerCase();
+      correctAnswerText = question.answer;
+    } else if (question.type === "grammar-correction") {
+      isCorrect = selectedIndex === question.correctIndex;
+      correctAnswerText = question.options[question.correctIndex];
+    } else {
+      // mcq (listening / reading / situational)
+      isCorrect = selectedIndex === question.answerIndex;
+      correctAnswerText = question.options[question.answerIndex];
+    }
+
+    res.json({
+      correct: isCorrect,
+      correctAnswer: correctAnswerText,
+      explanation: question.explanation || null,
+    });
+  } catch (err) {
+    console.error("Check answer error:", err);
     res.status(500).json({ error: "Something went wrong. Please try again." });
   }
 });
